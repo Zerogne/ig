@@ -3,45 +3,22 @@ import Navbar from '../comp/Navbar'; // Navbar is used in the JSX
 import CreatePostModal from '../comp/CreatePostModal'; // CreatePostModal is used in the JSX
 
 function Home() {
-  const [posts, setPosts] = useState([
-    {
-      _id: 'sample-post-id-1',
-      title: 'Sample Post Title',
-      content: 'This is a sample post content for preview purposes.',
-      school: 'Амжилт кибер сургууль',
-      anonymous: true,
-      accountEmail: '',
-      createdAt: new Date().toISOString(),
-      likes: 5,
-      comments: ['Sample comment 1', 'Sample comment 2'],
-    },
-    {
-      _id: 'sample-post-id-2',
-      title: 'Another Post Title',
-      content: 'This is another sample post with a profile image.',
-      school: 'ЕБ 85-р Сургууль',
-      anonymous: false,
-      accountEmail: 'user@example.com',
-      profileImg: 'client\src\assets\profile.png', // Add profile image URL
-      createdAt: new Date().toISOString(),
-      likes: 10,
-      comments: ['Another comment 1', 'Another comment 2'],
-    },
-  ]); // Initialize with sample posts
+  const [posts, setPosts] = useState([]); // Initialize with an empty array
   const [showModal, setShowModal] = useState(false); // showModal and setShowModal are used in the JSX
   const [user, setUser] = useState(null); // user and setUser are used in the JSX and logic
 
   const fetchPosts = useCallback(async () => {
     try {
-      console.log('Fetching posts from backend...');
-      const apiUrl = import.meta.env.VITE_API_URL
-        ? `${import.meta.env.VITE_API_URL}/api/posts`
-        : 'http://localhost:5000/api/posts';
-      const response = await fetch(apiUrl);
+      const API_URL = 'http://localhost:5000'; // Ensure this matches your backend URL
+      console.log('Fetching posts from:', `${API_URL}/api/posts`);
+      const response = await fetch(`${API_URL}/api/posts`);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch posts: ${response.statusText}`);
       }
+
       const data = await response.json();
+      console.log('Fetched posts:', data);
       setPosts(data);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -63,9 +40,12 @@ function Home() {
         throw new Error(`Failed to like post: ${response.statusText}`);
       }
 
+      const updatedPost = await response.json();
+
+      // Update the local state to reflect the new like count
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
-          post._id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post
+          post._id === postId ? { ...post, likes: updatedPost.likes } : post
         )
       );
     } catch (error) {
@@ -73,7 +53,7 @@ function Home() {
     }
   };
 
-  const handleComment = async (postId, comment) => { // handleComment is used in the JSX
+  const handleComment = async (postId, comment) => {
     const apiUrl = `http://localhost:5000/api/posts/${postId}/comment`;
     console.log('API URL:', apiUrl);
     try {
@@ -89,12 +69,12 @@ function Home() {
         throw new Error(`Failed to comment on post: ${response.statusText}`);
       }
 
+      const updatedPost = await response.json();
+
       // Update the local state to reflect the new comment
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
-          post._id === postId
-            ? { ...post, comments: [...(post.comments || []), comment] }
-            : post
+          post._id === postId ? { ...post, comments: updatedPost.comments } : post
         )
       );
     } catch (error) {
@@ -119,12 +99,9 @@ function Home() {
       <Navbar />
       {showModal && (
         <CreatePostModal
-          onClose={() => {
-            setShowModal(false);
-            fetchPosts(); // Fetch posts after closing the modal
-          }}
+          onClose={() => setShowModal(false)}
           onPostCreated={fetchPosts}
-          user={user} // Pass user to the modal for validation
+          userEmail={user?.email} // Pass the user's email
         />
       )}
       <div className="post-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '20px' }}>
@@ -178,6 +155,20 @@ function Home() {
             <p className="post-date" style={{ fontSize: '0.9rem', color: '#b3b3b3' }}>
               Created on: {new Date(post.createdAt).toLocaleString()}
             </p>
+
+            {/* Display Comments */}
+            {post.comments && post.comments.length > 0 && (
+              <div style={{ marginTop: '10px', color: '#b3b3b3' }}>
+                <h4>Comments:</h4>
+                <ul>
+                  {post.comments.map((comment, index) => (
+                    <li key={index} style={{ marginBottom: '5px' }}>
+                      {comment}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Like and Comment Buttons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-// Use a fallback URL directly to avoid relying on process.env in the browser
-const API_URL = window.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = 'http://localhost:5000'; // Ensure this matches your backend's port
 
 function CreatePostModal({ onClose, onPostCreated, user }) {
   const [title, setTitle] = useState('');
@@ -15,7 +14,13 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
       const response = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, school, anonymous }),
+        body: JSON.stringify({
+          title,
+          content,
+          school,
+          anonymous,
+          username: anonymous ? null : user.displayName, // Use username if not anonymous
+        }),
       });
 
       if (!response.ok) {
@@ -23,12 +28,10 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
       }
 
       const data = await response.json();
-      console.log('Post created:', data); // Log created post
-      onPostCreated(); // Refresh posts after creating
+      console.log('Post created successfully:', data); // Notify parent to refresh posts
       onClose(); // Close the modal
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Failed to create post. Please ensure the backend server is running and accessible.'); // Display user-friendly error
     }
   };
 
@@ -51,7 +54,6 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
               required
             />
           </div>
-
           <div className="input-group">
             <label htmlFor="content">Content</label>
             <textarea
@@ -62,7 +64,6 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
               required
             />
           </div>
-
           <div className="input-group">
             <label htmlFor="school">Select School</label>
             <select
@@ -74,12 +75,11 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
               <option value="">Select your school</option>
               <option value="school1">Амжилт кибер сургууль</option>
               <option value="school2">ЕБ 85-р Сургууль</option>
-              <option value="school2">ЕБ 38-р Сургууль</option>
-              <option value="school2">ЕБ 36-р Сургууль</option>
-              <option value="school3">ЕБ 84-р Сургууль</option>
+              <option value="school3">ЕБ 38-р Сургууль</option>
+              <option value="school4">ЕБ 36-р Сургууль</option>
+              <option value="school5">ЕБ 84-р Сургууль</option>
             </select>
           </div>
-
           <div className="input-group">
             <label>
               <input
@@ -91,7 +91,6 @@ function CreatePostModal({ onClose, onPostCreated, user }) {
               Post Anonymously
             </label>
           </div>
-
           <div className="modal-actions">
             <button type="submit" className="submit-btn">
               Submit
